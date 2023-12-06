@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dinamik Tablo</title>
+    <style>
+      table {
+        border-collapse: collapse;
+        width: 80%;
+        margin: 20px auto;
+      }
+
+      th,
+      td {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+
+      .details {
+        display: none;
+      }
+      .first {
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <table id="myTable">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Hesap Kodu</th>
+          <th>Borç</th>
+        </tr>
+      </thead>
+      <tbody>
+
+      </tbody>
+    </table>
+
+    <script>
+      function verileriGetir() {
+      
+        fetch("https://cobalt-blue-seagull-kit.cyclic.app/") // API endpoint'inizi buraya ekleyin
+          .then((response) => response.json())
+          .then((veriler) => {
+            const tableBody = document.querySelector("#myTable tbody");
+
+            
+            tableBody.innerHTML = "";
+
+            veriler.forEach((veri) => {
+              const mainRow = document.createElement("tr");
+              mainRow.innerHTML = `
+                        <td><button onclick="toggleFirstDetails(this)">+</button></td>
+                        <td>${veri.hesab_no}</td>
+                        <td>${veri.borc}</td>
+                    `;
+              tableBody.appendChild(mainRow);
+
+          
+              veri.sub_group.forEach((group) => {
+                const detailsRow = document.createElement("tr");
+                detailsRow.className = "first";
+                detailsRow.innerHTML = `
+                            <td><button onclick="toggleDetails(this)">+</button></td>
+                            <td>${group.hesab_no}</td>
+                            <td>${group.borc}</td>
+                        `;
+                tableBody.appendChild(detailsRow);
+
+                group.sub_group.forEach((g) => {
+                  const detailsRow = document.createElement("tr");
+                  detailsRow.className = "details";
+                  detailsRow.innerHTML = `
+                                <td></td>
+                                <td>${g.hesab_no}</td>
+                                <td>${g.borc}</td>
+                            `;
+                  tableBody.appendChild(detailsRow);
+                });
+              });
+            });
+          })
+          .catch((error) => console.error("Veri alma hatası:", error));
+      }
+
+      function toggleDetails(button) {
+        const mainRow = button.parentNode.parentNode;
+        const detailsRows = getDetailsRows(mainRow);
+
+        detailsRows.forEach((detailsRow) => {
+          detailsRow.style.display =
+            detailsRow.style.display === "table-row" ? "none" : "table-row";
+        });
+        button.innerHTML = button.innerHTML === "+" ? "-" : "+";
+      }
+
+      function toggleFirstDetails(button) {
+        const mainRow = button.parentNode.parentNode;
+        const detailsRows = getFirstDetailsRows(mainRow);
+
+        detailsRows.forEach((detailsRow) => {
+          detailsRow.style.display =
+            detailsRow.style.display === "table-row" ? "none" : "table-row";
+        });
+        button.innerHTML = button.innerHTML === "+" ? "-" : "+";
+      }
+
+      function getDetailsRows(mainRow) {
+        const detailsRows = [];
+        let currentRow = mainRow.nextSibling;
+
+      
+        while (currentRow && currentRow.className === "details") {
+          detailsRows.push(currentRow);
+          currentRow = currentRow.nextSibling;
+        }
+
+        return detailsRows;
+      }
+      function getFirstDetailsRows(mainRow) {
+        const detailsRows = [];
+        let currentRow = mainRow.nextSibling;
+
+        
+        while (currentRow && (currentRow.className === "details" || currentRow.className === "first")) {
+          if (currentRow.className === "first") {
+            detailsRows.push(currentRow);
+          }
+          currentRow = currentRow.nextSibling;
+        }
+
+        return detailsRows;
+      }
+      verileriGetir()
+    </script>
+
+  </body>
+</html>
